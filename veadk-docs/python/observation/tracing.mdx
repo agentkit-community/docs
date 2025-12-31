@@ -1,0 +1,153 @@
+---
+title: 概述
+---
+
+观测指的是对智能体执行过程的**全链路记录与追踪**。在 Agent 系统中，主要包括：
+
+* 用户输入与请求的接收时间和内容；
+* 智能体内部推理过程，例如模型调用、工具执行、策略决策；
+* 各工具、服务或外部系统接口的调用记录；
+* 响应生成及输出结果。
+
+通过观测，可以将智能体执行过程形成可分析、可追溯的日志数据，*为开发、调试、监控和优化提供依据*。
+
+VeADK 中的观测模块主要能够提供如下能力：
+
+* **可视化链路**：每次请求从接入到响应的完整流程可追踪；
+* **结构化数据**：支持记录上下文、状态、事件类型、耗时等；
+* **跨组件追踪**：涵盖 Agent、工具、记忆模块、知识库及外部接口。
+
+## 开启观测
+
+<Info>
+    VeADK 相关字段命名遵循 OpenTelemetry 生成式 AI 规范，您可以直接将 Tracing 数据导入到 OpenTelemetry 兼容的系统中进行分析和可视化。
+</Info>
+
+您可以在 VeADK 中开启火山引擎 Agent 执行全链路观测能力：
+
+```python agent.py lines icon="python"
+import asyncio
+from veadk import Agent, Runner
+from veadk.tracing.telemetry.exporters.apmplus_exporter import APMPlusExporter
+from veadk.tracing.telemetry.opentelemetry_tracer import OpentelemetryTracer
+
+# init tracing exporter
+exporters = [
+    APMPlusExporter(),
+]
+tracer = OpentelemetryTracer(exporters=exporters)
+
+# Define the Agent
+agent = Agent(
+    tracers=[tracer],
+)
+
+runner = Runner(agent=agent)
+
+response = asyncio.run(runner.run(messages="hi!"))
+print(response)
+```
+
+开启后，您可以看到日志中可以打印出相关 Tracing 数据的 ID：
+
+![TraceID示意](../assets/images/observation/show_traceid.jpeg)
+
+## 观测结果
+
+下面是一段多 Agent 系统中调用和事件链路示例，展示了一个智能体系统中多个 Agent 之间的调用和事件流程。
+
+```json tracing.json lines
+[
+    {
+        "name": "execute_tool transfer_to_agent",
+        "span_id": 8839983747734433620,
+        "trace_id": 161011438572144016825706884868588853689,
+        "start_time": 1763089073534973000,
+        "end_time": 1763089073535544000,
+        "attributes": {
+            "agent.name": "coding_agent",
+            "gen_ai.operation.name": "execute_tool",
+            "gen_ai.tool.name": "transfer_to_agent",
+        },
+        "parent_span_id": 5680387922600458423
+    },
+    {
+        "name": "call_llm",
+        "span_id": 6376035117066938110,
+        "trace_id": 161011438572144016825706884868588853689,
+        "start_time": 1763089073539770000,
+        "end_time": 1763089112820657000,
+        "attributes": {
+            "agent.name": "python_coder",
+            "gen_ai.request.model": "openai/doubao-seed-1-6-251015",
+            "gen_ai.request.type": "chat",
+            "gen_ai.span.kind": "llm",
+            "gen_ai.prompt.0.role": "user",
+            "gen_ai.prompt.0.content": "使用 Python 帮我写一段快速排序的代码。"
+        },
+        "parent_span_id": 11028930176666491606
+    },
+    {
+        "name": "invoke_agent python_coder",
+        "span_id": 11028930176666491606,
+        "trace_id": 161011438572144016825706884868588853689,
+        "start_time": 1763089073538867000,
+        "end_time": 1763089112820868000,
+        "attributes": {
+            "gen_ai.span.kind": "agent",
+            "gen_ai.operation.name": "invoke_agent",
+            "gen_ai.agent.description": "擅长使用 Python 编程语言来解决问题。",
+            "gen_ai.system": "openai",
+            "agent.name": "python_coder"
+        },
+        "parent_span_id": 5680387922600458423
+    },
+    {
+        "name": "call_llm",
+        "span_id": 5680387922600458423,
+        "trace_id": 161011438572144016825706884868588853689,
+        "start_time": 1763089069195992000,
+        "end_time": 1763089112820933000,
+        "attributes": {
+            "agent.name": "coding_agent",
+            "gen_ai.request.model": "openai/doubao-seed-1-6-251015",
+            "gen_ai.request.type": "chat",
+            "gen_ai.span.kind": "llm",
+            "gen_ai.prompt.0.role": "user",
+            "gen_ai.prompt.0.content": "使用 Python 帮我写一段快速排序的代码。",
+        },
+        "parent_span_id": 987150150265236585
+    },
+    {
+        "name": "invoke_agent coding_agent",
+        "span_id": 987150150265236585,
+        "trace_id": 161011438572144016825706884868588853689,
+        "start_time": 1763089069192617000,
+        "end_time": 1763089112821024000,
+        "attributes": {
+            "gen_ai.span.kind": "agent",
+            "gen_ai.operation.name": "invoke_agent",
+            "gen_ai.agent.description": "可以调用适合的智能体来解决用户问题。",
+            "gen_ai.system": "openai",
+            "agent.name": "coding_agent",
+        },
+        "parent_span_id": 11431457420615823859
+    },
+    {
+        "name": "invocation",
+        "span_id": 11431457420615823859,
+        "trace_id": 161011438572144016825706884868588853689,
+        "start_time": 1763089069192376000,
+        "end_time": 1763089112821085000,
+        "attributes": {
+            "gen_ai.operation.name": "chain",
+            "gen_ai.span.kind": "workflow",
+            "gen_ai.system": "openai",
+            "agent.name": "python_coder",
+        },
+        "parent_span_id": null
+    }
+]
+```
+
+通过 Tracing，开发者可以对智能体系统进行**可观察性增强**，从而实现高效开发、可靠运行以及持续优化。

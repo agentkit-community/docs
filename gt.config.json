@@ -1,0 +1,20 @@
+{
+  "$schema": "https://assets.gtx.dev/config-schema.json",
+  "defaultLocale": "zh",
+  "projectId": "prj_e4m0piti7mz0h6hwzddu3568",
+  "locales": [
+    "en-US"
+  ],
+  "files": {
+    "mdx": {
+      "include": [
+        "**/*.mdx"
+      ],
+      "exclude": [
+        "[locale]/*.mdx"
+      ],
+      "transform": "[locale]/*.mdx"
+    }
+  },
+  "generateRedirects": "./docs.json"
+}

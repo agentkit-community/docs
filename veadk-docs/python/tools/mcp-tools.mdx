@@ -1,0 +1,135 @@
+---
+title: MCP 工具
+---
+
+VeADK 中提供了部分内置的 MCP 工具，用于与外部系统进行交互。
+
+## 集成飞书
+
+飞书 MCP 工具集可以帮助您快速实现 AI agent 与飞书开放能力的集成，实现飞书云文档处理、会话管理、日历安排等自动化场景。
+
+### 前置准备
+
+1. 需要配置用于 Lark 服务的 Application ID
+2. 需要配置用于 Lark 服务的 API Key
+3. 需要配置用于 Lark 服务的 OAuthToken
+
+上述信息获取方式详见：[**Lark创建应用**](https://open.larkoffice.com/document/develop-an-echo-bot/introduction)
+
+### 使用方法
+
+```python agent.py lines icon="python"
+
+```
+
+### 运行结果
+
+![运行结果](../assets/images/tools/lark1.png)
+![运行结果](../assets/images/tools/lark2.png)
+
+## 集成 LAS 数据湖
+
+`LAS` 该MCP工具集基于AI多模态数据湖服务LAS，提供多模态数据集的创建、预览、查询分析、编辑和清洗加工能力。
+
+### 前置准备
+
+!!! warning "使用 `las` 工具的附加要求"
+
+    1. 需要配置用于 Agent 推理模型的 API Key
+    2. 需要预先[创建LAS通用数据集](https://console.volcengine.com/las/region:las+cn-beijing/next/dataset/common/create)，并获得数据集的LAS DatasetId
+    3. 需要配置用于 Las 服务的 DatasetId
+    4. 需要配置用于 Las 服务的 URL，[URL获取方式](https://www.volcengine.com/mcp-marketplace/detail?name=LAS%20MCP)
+    
+### 使用方法
+
+=== "代码"
+
+    ```python
+    --8<-- "examples/tools/las/agent.py"
+    ```
+
+=== "环境变量"
+
+    必须配置在环境变量的配置项：
+
+    - `TOOL_LAS_URL`：  用于提供 LAS MCP Server 服务的地址
+    - `TOOL_LAS_DATASET_ID`：  配置使用LAS服务的数据集ID
+
+    环境变量列表：
+    - `MODEL_AGENT_API_KEY`：  用于 Agent 推理模型 API Key
+
+    或在 `config.yaml` 中定义：
+
+    ```yaml title="config.yaml"
+    model:
+      agent:
+        provider: openai
+        name: doubao-seed-1-6-250615
+        api_base: https://ark.cn-beijing.volces.com/api/v3/
+        api_key: your-api-key-here
+
+    ```
+
+### 运行结果
+
+![运行结果](../assets/images/tools/las1.png)
+![运行结果](../assets/images/tools/las2.png)
+
+## 集成视频云
+
+`vod_tools`允许Agent通过调用火山引擎的视频云MCP来进行视频剪辑处理，详情请参考[VOD MCP Server](https://github.com/volcengine/mcp-server/blob/main/server/mcp_server_vod/README_zh.md)
+
+### 前置准备
+
+1. 需要配置火山引擎 AK、SK
+2. （可选）可以配置`TOOL_VOD_GROUPS`选择多样化的视频剪辑能力。可选范围为：
+    - `edit`:视频剪辑相关tools
+    - `intelligent_slicing`: 智能切片相关tools
+    - `intelligent_matting`: 智能抠图相关tools
+    - `subtitle_processing`: 字幕处理相关tools
+    - `audio_processing`: 音频处理相关tools
+    - `video_enhancement`: 视频增强相关tools
+    - `upload`: 上传相关
+    - `video_play`: 视频播放相关
+3. （可选）工具连接超时时长`TOOL_VOD_TIMEOUT`，默认为 10 秒
+- 注：如果需要多个工具组，请使用逗号进行连接，如果不进行配置，则默认为`edit,video_play`
+- 注：视频云工具不支持 Space 的创建，请在火山视频云控制台提前创建[视频云空间](https://console.volcengine.com/vod/region:vod+cn-north-1/overview/)
+
+可选环境变量：
+
+- `TOOL_VOD_GROUPS`： 配置能力组
+- `TOOL_VOD_TIMEOUT`：工具连接超时时长, 默认为10.0秒
+
+### 使用方法
+
+
+```python agent.py lines icon="python"
+import asyncio
+from veadk import Agent, Runner
+from veadk.tools.builtin_tools.vod import vod_tools
+agent = Agent(tools=[vod_tools])
+runner = Runner(agent)
+result = asyncio.run(
+    runner.run(
+        messages="将这两个视频合并:<your-url1>, <your-url2>, space_name为<your-space-name",
+    )
+)
+print(result)
+```
+
+### 运行结果
+
+输出结果：
+
+```text
+已成功将两个视频合并，合并后的视频信息如下：
+- **播放地址**：<url>
+- **视频时长**：x秒 
+- **分辨率**：xxxxx
+- **文件名称**：xxxxx.mp4  
+（注：播放地址有效期为60分钟，若过期可重新生成）
+```
+
+<Tip>
+    注：有些视频编辑任务可能时间开销较大，该类任务会直接返回一个task_id，可以继续询问agent，让其查询task是否完成，从而获得任务后续。
+</Tip>

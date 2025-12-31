@@ -1,0 +1,247 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "aspen",
+  "name": "agentkit-docs",
+  "colors": {
+    "primary": "#16A34A",
+    "light": "#07C983",
+    "dark": "#15803D"
+  },
+  "styling": {
+    "codeblocks": {
+      "theme": "github-light"
+    }
+  },
+  "favicon": "/assets/images/volcengine-color.svg",
+  "navigation": {
+    "products": [
+      {
+        "product": "VeADK",
+        "icon": "link",
+        "description": "Volcengine Agent Development Kit",
+        "tabs": [
+          {
+            "tab": "文档",
+            "dropdowns": [
+              {
+                "dropdown": "Python",
+                "icon": "python",
+                "pages": [
+                  "veadk-docs/python/changelog-py",
+                  {
+                    "group": "起步",
+                    "pages": [
+                      "veadk-docs/python/get-started/install",
+                      "veadk-docs/python/get-started/quickstart"
+                    ]
+                  },
+                  {
+                    "group": "智能体",
+                    "pages": [
+                      "veadk-docs/python/agent/build",
+                      "veadk-docs/python/agent/basic-settings",
+                      "veadk-docs/python/agent/prompt-management",
+                      {
+                        "group": "多智能体协作",
+                        "pages": [
+                          "veadk-docs/python/agent/multi-agent-overview",
+                          "veadk-docs/python/agent/workflow-agent",
+                          "veadk-docs/python/agent/a2a"
+                        ]
+                      },
+                      "veadk-docs/python/agent/responses-api"
+                    ]
+                  },
+                  {
+                    "group": "工具",
+                    "pages": [
+                      "veadk-docs/python/tools/builtin-tools",
+                      "veadk-docs/python/tools/system-tools",
+                      "veadk-docs/python/tools/function-tools",
+                      "veadk-docs/python/tools/mcp-tools"
+                    ]
+                  },
+                  {
+                    "group": "知识库",
+                    "pages": [
+                      "veadk-docs/python/knowledgebase/overview",
+                      "veadk-docs/python/knowledgebase/best-practice"
+                    ]
+                  },
+                  {
+                    "group": "记忆库",
+                    "pages": [
+                      "veadk-docs/python/memory/short-term-memory",
+                      "veadk-docs/python/memory/long-term-memory"
+                    ]
+                  },
+                  {
+                    "group": "安全",
+                    "pages": [
+                      "veadk-docs/python/security/overview",
+                      "veadk-docs/python/security/inbound",
+                      {
+                        "group": "出站认证",
+                        "pages": [
+                          "veadk-docs/python/security/api-key-outbound",
+                          "veadk-docs/python/security/oauth2-m2m-outbound",
+                          "veadk-docs/python/security/oauth2-user-federation-outbound",
+                          "veadk-docs/python/security/trusted-mcp-outbound"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "group": "可观测",
+                    "pages": [
+                      "veadk-docs/python/observation/tracing",
+                      "veadk-docs/python/observation/ve-tracing",
+                      "veadk-docs/python/observation/span-attributes"
+                    ]
+                  },
+                  {
+                    "group": "部署与持续优化",
+                    "pages": [
+                      "veadk-docs/python/deploy/deploy-agentkit",
+                      "veadk-docs/python/deploy/deploy-vefaas",
+                      "veadk-docs/python/deploy/evaluation",
+                      "veadk-docs/python/deploy/optimization"
+                    ]
+                  }
+                ]
+              },
+              {
+                "dropdown": "Golang",
+                "icon": "golang",
+                "pages": []
+              },
+              {
+                "dropdown": "Java",
+                "icon": "java",
+                "pages": []
+              }
+            ]
+          },
+          {
+            "tab": "命令行工具",
+            "pages": [
+              "veadk-docs/python/cli/overview"
+            ]
+          },
+          {
+            "tab": "生态兼容",
+            "dropdowns": [
+              {
+                "dropdown": "Langchain",
+                "icon": "/assets/images/langchain-color.svg",
+                "pages": [
+                  {
+                    "group": "模型",
+                    "pages": [
+                      "veadk-docs/python/community/langchain-ai/model"
+                    ]
+                  },
+                  {
+                    "group": "记忆",
+                    "pages": [
+                      "veadk-docs/python/community/langchain-ai/memory/short-term-memory",
+                      "veadk-docs/python/community/langchain-ai/memory/long-term-memory"
+                    ]
+                  },
+                  {
+                    "group": "知识库",
+                    "pages": [
+                      "veadk-docs/python/community/langchain-ai/knowledgebase"
+                    ]
+                  },
+                  {
+                    "group": "工具",
+                    "pages": [
+                      "veadk-docs/python/community/langchain-ai/tools/builtin-tools",
+                      "veadk-docs/python/community/langchain-ai/tools/mcp-tools"
+                    ]
+                  }
+                ]
+              },
+              {
+                "dropdown": "Dify",
+                "icon": "/assets/images/dify-color.svg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "product": "AgentKit SDK",
+        "icon": "screwdriver-wrench",
+        "description": "SDK for AgentKit Platform",
+        "tabs": [
+          {
+            "tab": "文档",
+            "groups": [
+              {
+                "group": "介绍",
+                "pages": [
+                  "agentkit-docs/python/introduction/overview",
+                  "agentkit-docs/python/introduction/install",
+                  "agentkit-docs/python/introduction/quickstart",
+                  "agentkit-docs/python/introduction/faq"
+                ]
+              },
+              {
+                "group": "命令行工具",
+                "pages": [
+                  "agentkit-docs/python/cli/overview",
+                  "agentkit-docs/python/cli/commands",
+                  "agentkit-docs/python/cli/configurations",
+                  "agentkit-docs/python/cli/logging"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "product": "AgentKit Samples",
+        "description": "Best practice for productive AI agents",
+        "icon": "code"
+      }
+    ]
+  },
+  "logo": {
+    "light": "/assets/images/volcengine-color.svg",
+    "dark": "/assets/images/volcengine-color.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:hi@mintlify.com"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://dashboard.mintlify.com"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/mintlify",
+      "github": "https://github.com/mintlify",
+      "linkedin": "https://linkedin.com/company/mintlify"
+    }
+  }
+}

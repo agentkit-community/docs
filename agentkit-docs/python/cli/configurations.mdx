@@ -1,0 +1,1186 @@
+---
+title: 配置文件
+---
+
+`agentkit.yaml` 是配置 Agent 的核心文件，包含了所有运行参数。本文档帮你理解每个配置项的作用。
+
+## 配置系统概览
+
+AgentKit 采用**两级配置**架构：
+
+| 配置文件 | 位置 | 作用 |
+|---------|------|------|
+| **项目配置** | `./agentkit.yaml` | 项目级配置，每个 Agent 项目独立 |
+| **全局配置** | `~/.agentkit/config.yaml` | 用户级配置，跨项目共享（如火山引擎凭证） |
+
+**配置优先级**：
+```
+环境变量 > 项目配置 > 全局配置 > 默认值
+```
+
+## 文件结构
+
+项目配置文件由三部分组成：
+
+```yaml
+common:
+  # 基础配置（所有模式通用）
+  agent_name: my_agent
+  entry_point: my_agent.py
+  language: Python
+  launch_type: cloud
+  runtime_envs: {}           # 应用级环境变量
+
+launch_types:
+  local:
+    # Local 模式的专属配置
+  hybrid:
+    # Hybrid 模式的专属配置
+  cloud:
+    # Cloud 模式的专属配置
+
+docker_build:
+  # Docker 构建配置（可选）
+  base_image: python:3.12-slim
+  build_script: scripts/setup.sh
+```
+
+**三个部分**：
+- **common** - 通用配置，适用于所有部署模式
+- **launch_types** - 针对不同部署模式的特定配置
+- **docker_build** - Docker 构建自定义配置（可选）
+
+---
+
+## common 配置
+
+所有部署模式都需要的基础配置。
+
+### 配置示例
+
+```yaml
+common:
+  agent_name: my_weather_agent        # Agent 名称（必填）
+  entry_point: my_weather_agent.py    # 入口文件（必填）
+  description: 天气查询 Agent          # 描述（可选）
+  language: Python                    # 编程语言
+  language_version: '3.12'            # 语言版本
+  dependencies_file: requirements.txt  # 依赖文件
+  launch_type: cloud                  # 部署模式
+  runtime_envs:                       # 应用级环境变量（所有模式共享）
+    LOG_LEVEL: info
+```
+
+### 配置项详解
+
+#### agent_name（必填）
+
+**Agent 的名字**
+
+- 📝 **作用**：给你的 Agent 起个名字
+- ✅ **规则**：只能用字母、数字、`_` 和 `-`
+- 🎯 **用途**：
+  - Docker 镜像的名字
+  - 云端 Runtime 的名字前缀
+  - 默认的镜像仓库名
+
+**示例**：
+```yaml
+agent_name: weather_agent           # 推荐：简单清晰
+agent_name: financial-analyzer-v2   # 可以：带版本号
+agent_name: customer_support_bot    # 可以：描述性强
+```
+
+#### entry_point（必填）
+
+**Agent 代码的入口文件**
+
+- 📝 **作用**：指定运行哪个文件
+- ✅ **规则**：必须是 `.py`、`.go` 或 `.sh` 结尾
+- 🎯 **用途**：容器启动时运行这个文件
+
+**示例**：
+```yaml
+# Python 项目
+entry_point: app.py
+entry_point: server.py
+
+# Go 项目
+entry_point: main.go
+entry_point: cmd/server/main.go
+
+# 自定义启动脚本
+entry_point: start.sh
+```
+
+#### description（可选）
+
+**Agent 的描述信息**
+
+- 📝 **作用**：简单描述 Agent 是做什么的
+- ✅ **规则**：任意文字
+- 🎯 **用途**：帮助团队成员理解用途
+
+**示例**：
+```yaml
+description: "天气查询 Agent，支持全国主要城市"
+description: "客服助手，处理常见问题"
+```
+
+#### language（可选）
+
+**编程语言**
+
+- 📝 **作用**：指定项目使用的编程语言
+- ✅ **选项**：`Python`、`Golang`
+- ✅ **默认**：`Python`
+- 🎯 **用途**：决定 Dockerfile 模板和构建流程
+
+**示例**：
+```yaml
+language: Python    # Python 项目
+language: Golang    # Go 项目
+```
+
+#### language_version（可选）
+
+**语言运行版本**
+
+- 📝 **作用**：指定语言版本
+- ✅ **Python 支持**：`3.10`、`3.11`、`3.12`、`3.13`
+- ✅ **Golang 支持**：`1.24`
+- ✅ **默认**：Python `3.12`，Golang `1.24`
+
+**示例**：
+```yaml
+# Python 项目
+language: Python
+language_version: '3.12'
+
+# Go 项目
+language: Golang
+language_version: '1.24'
+```
+
+> ⚠️ **注意**：`python_version` 已废弃，请使用 `language_version`
+
+#### dependencies_file（可选）
+
+**依赖包列表文件**
+
+- 📝 **作用**：指定依赖文件位置
+- ✅ **默认**：Python 项目为 `requirements.txt`，Go 项目为 `go.mod`
+- 🎯 **用途**：构建时安装这些依赖
+
+**示例**：
+```yaml
+# Python 项目
+dependencies_file: requirements.txt
+dependencies_file: requirements/prod.txt
+
+# Go 项目
+dependencies_file: go.mod
+```
+
+#### launch_type（必填）
+
+**部署和运行模式**
+
+- 📝 **作用**：选择在哪里构建和运行
+- ✅ **选项**：`local`、`hybrid`、`cloud`
+
+| 模式 | 适合场景 | 构建位置 | 运行位置 |
+|------|---------|---------|---------|
+| `local` | 本地开发调试 | 本地电脑 | 本地电脑 |
+| `hybrid` | 过渡阶段 | 本地电脑 | 云端平台 |
+| `cloud` | 生产环境 | 云端平台 | 云端平台 |
+
+**示例**：
+```yaml
+launch_type: local   # 本地开发
+launch_type: hybrid  # 本地构建 + 云端部署
+launch_type: cloud   # 生产环境（推荐）
+```
+
+#### runtime_envs（可选）
+
+**应用级环境变量**
+
+- 📝 **作用**：定义所有部署模式共享的环境变量
+- 🎯 **用途**：传递通用配置，如日志级别
+- ⚠️ **优先级**：策略级 `runtime_envs` 会覆盖应用级同名变量
+
+**示例**：
+```yaml
+common:
+  runtime_envs:
+    LOG_LEVEL: info
+    APP_ENV: production
+```
+
+---
+
+## Local 模式配置
+
+在本地 Docker 上构建和运行，适合开发调试。
+
+### 配置示例
+
+```yaml
+launch_types:
+  local:
+    image_tag: latest                  # 镜像标签
+    invoke_port: 8000                  # 应用端口
+    container_name: my_agent           # 容器名称（可选）
+    runtime_envs:                      # 策略级环境变量
+      MODEL_AGENT_API_KEY: xxx
+    ports:                             # 端口映射
+      - "8000:8000"
+    restart_policy: unless-stopped     # 重启策略
+    memory_limit: 1g                   # 内存限制
+    cpu_limit: '1'                     # CPU 限制
+```
+
+### 配置项详解
+
+#### image_tag
+
+**镜像版本标签**
+
+- 默认：`latest`
+- 作用：区分不同版本的镜像
+- 示例：`latest`、`v1.0`、`dev`
+
+#### invoke_port
+
+**Agent 监听的端口**
+
+- 默认：`8000`
+- 作用：指定应用监听哪个端口
+- ❗ 必须与代码中的端口一致
+
+#### container_name
+
+**Docker 容器名称**
+
+- 默认：使用 `agent_name`
+- 作用：给容器起个名字
+- 可以留空，自动生成
+
+#### runtime_envs
+
+**策略级运行时环境变量**
+
+传递给容器的环境变量，如 API Key、配置参数等。会与 `common.runtime_envs` 合并，同名变量会覆盖。
+
+```yaml
+runtime_envs:
+  MODEL_AGENT_API_KEY: your_api_key  # 模型 API Key
+  DEBUG: 'true'                      # 开启调试
+  LOG_LEVEL: debug                   # 覆盖 common 中的日志级别
+```
+
+#### ports
+
+**端口映射**
+
+将容器内部端口映射到主机端口，格式：`主机端口:容器端口`
+
+```yaml
+ports:
+  - "8080:8000"  # 主机 8080 映射到容器 8000
+  - "9090:9090"  # 监控端口
+```
+
+#### volumes
+
+**卷挂载**
+
+将主机目录挂载到容器内，格式：`主机路径:容器路径`
+
+```yaml
+volumes:
+  - "./data:/app/data"      # 数据目录
+  - "./logs:/app/logs"      # 日志目录
+```
+
+#### restart_policy
+
+**容器重启策略**
+
+- 默认：`unless-stopped`
+- 选项：
+  - `no` - 不重启
+  - `on-failure` - 失败时重启
+  - `always` - 总是重启
+  - `unless-stopped` - 除非手动停止，否则重启
+
+#### memory_limit / cpu_limit
+
+**资源限制**
+
+限制容器使用的资源，防止占用过多。
+
+```yaml
+memory_limit: 2g    # 限制 2GB 内存
+cpu_limit: '1'      # 限制 1 个 CPU 核
+```
+
+### 自动管理的字段
+
+以下字段由 CLI 自动生成和管理，**不需要手动配置**：
+
+| 字段 | 说明 |
+|------|------|
+| `container_id` | 部署后的容器 ID |
+| `image_id` | 构建后的镜像 ID |
+| `build_timestamp` | 构建时间 |
+| `deploy_timestamp` | 部署时间 |
+| `full_image_name` | 完整镜像名（如 `my-agent:latest`） |
+
+---
+
+## Cloud 模式配置
+
+在火山引擎上构建和运行，适合生产环境。
+
+### 配置示例
+
+```yaml
+launch_types:
+  cloud:
+    region: cn-beijing                       # 区域
+    image_tag: "{{timestamp}}"               # 镜像标签（支持模板变量）
+    
+    # TOS 对象存储配置
+    tos_bucket: Auto                         # 自动创建存储桶
+    
+    # Container Registry 配置
+    cr_instance_name: Auto                   # CR 实例名（Auto = 自动创建）
+    cr_namespace_name: agentkit              # CR 命名空间
+    cr_repo_name: ""                         # CR 仓库名（空 = 使用 agent_name）
+    
+    # Runtime 配置
+    runtime_name: Auto                       # Runtime 名称
+    runtime_role_name: Auto                  # 授权角色名
+    runtime_apikey_name: Auto                # API Key 密钥名
+    
+    # 环境变量
+    runtime_envs:
+      MODEL_AGENT_API_KEY: xxx               # 模型 API Key
+      MODEL_AGENT_NAME: ep-xxx               # 模型接入点
+```
+
+### 模板变量
+
+Cloud 模式支持**模板变量**，在构建/部署时自动渲染：
+
+| 变量 | 说明 | 示例值 |
+|------|------|--------|
+| `{{timestamp}}` | 当前时间戳（YYYYMMDDHHmmss） | `20251128153042` |
+| `{{account_id}}` | 火山引擎账号 ID | `2100123456` |
+
+**使用示例**：
+```yaml
+image_tag: "{{timestamp}}"                          # 每次构建唯一 tag
+cr_instance_name: "agentkit-platform-{{account_id}}"     # 账号隔离的 CR 实例
+tos_bucket: "agentkit-platform-{{account_id}}"           # 账号隔离的存储桶
+```
+
+### Auto 关键字
+
+当配置值为 `Auto` 时，CLI 会自动创建或管理对应资源：
+
+| 字段 | Auto 行为 |
+|------|----------|
+| `tos_bucket` | 自动创建存储桶 `agentkit-platform-{{account_id}}` |
+| `cr_instance_name` | 自动创建 CR 实例 `agentkit-platform-{{account_id}}` |
+| `runtime_name` | 自动创建 Runtime |
+| `runtime_role_name` | 自动创建授权角色 |
+| `runtime_apikey_name` | 自动创建 API Key 密钥 |
+
+### 配置项详解
+
+#### region
+
+**火山引擎区域**
+
+- 默认：`cn-beijing`
+- 作用：选择服务运行的地理位置
+- 可选：`cn-beijing`（目前仅支持北京区域）
+
+💡 **建议**：选择离用户最近的区域，降低延迟
+
+#### image_tag
+
+**镜像版本标签**
+
+- 默认：`{{timestamp}}`（每次构建生成唯一标签）
+- 作用：区分不同版本
+- 示例：`{{timestamp}}`、`latest`、`v1.0.0`
+
+```yaml
+# 方式 1：使用时间戳（推荐，确保每次构建唯一）
+image_tag: "{{timestamp}}"
+
+# 方式 2：固定版本
+image_tag: v1.0.0
+
+# 方式 3：使用 latest（不推荐用于生产）
+image_tag: latest
+```
+
+#### tos_bucket
+
+**对象存储桶**
+
+- 默认：`Auto`（自动创建）
+- 作用：存储代码压缩包（用于云端构建）
+
+```yaml
+# 自动创建（推荐）
+tos_bucket: Auto
+
+# 使用已有存储桶
+tos_bucket: my-existing-bucket
+```
+
+#### cr_instance_name
+
+**Container Registry 实例名**
+
+- 默认：`Auto`（自动创建）
+- 作用：Docker 镜像存储在哪个 CR 实例
+
+```yaml
+# 自动创建
+cr_instance_name: Auto
+
+# 使用已有实例
+cr_instance_name: my-existing-cr
+```
+
+#### cr_namespace_name
+
+**CR 命名空间**
+
+- 默认：`agentkit`
+- 作用：组织和管理镜像
+- 自动创建：不存在时自动创建
+
+#### cr_repo_name
+
+**CR 仓库名称**
+
+- 默认：空（使用 `agent_name`）
+- 作用：存储镜像的仓库
+- 自动创建：不存在时自动创建
+
+#### runtime_name / runtime_role_name / runtime_apikey_name
+
+**Runtime 相关配置**
+
+- 默认：`Auto`（自动创建）
+- 作用：管理云端运行时实例及其认证
+
+```yaml
+runtime_name: Auto           # Runtime 名称
+runtime_role_name: Auto      # IAM 授权角色
+runtime_apikey_name: Auto    # API Key 密钥名
+```
+
+#### runtime_envs
+
+**策略级运行时环境变量**
+
+Agent 运行时需要的配置，最重要的是模型 API 凭证。会与 `common.runtime_envs` 合并。
+
+**必须配置**：
+```yaml
+runtime_envs:
+  MODEL_AGENT_API_KEY: xxx  # 火山方舟 API Key
+  MODEL_AGENT_NAME: ep-xxx  # 火山方舟接入点 ID
+```
+
+**可选配置**（增强功能）：
+```yaml
+runtime_envs:
+  # 基础配置
+  MODEL_AGENT_API_KEY: xxx
+  MODEL_AGENT_NAME: ep-xxx
+  
+  # 可观测性（日志、监控、链路追踪）
+  OBSERVABILITY_OPENTELEMETRY_APMPLUS_API_KEY: xxx
+  OBSERVABILITY_OPENTELEMETRY_APMPLUS_ENDPOINT: http://apmplus-cn-beijing.volces.com:4317
+  OBSERVABILITY_OPENTELEMETRY_APMPLUS_SERVICE_NAME: my_agent
+  
+  # 其他配置
+  DEBUG: 'true'     # 开启调试模式
+  LOG_LEVEL: info   # 设置日志级别
+```
+
+#### build_timeout
+
+**构建超时时间**
+
+- 默认：`3600`（秒）
+- 作用：云端构建的最大等待时间
+
+### 自动管理的字段
+
+以下字段由 CLI 自动生成和管理，**不需要手动配置**：
+
+**TOS 存储相关**
+
+| 字段 | 说明 |
+|------|------|
+| `tos_prefix` | 对象存储前缀（默认 `agentkit-builds`） |
+| `tos_region` | TOS 服务区域 |
+| `tos_object_key` | 代码包的存储路径 |
+| `tos_object_url` | 代码包的访问地址 |
+
+**Code Pipeline 构建相关**
+
+| 字段 | 说明 |
+|------|------|
+| `cp_workspace_name` | 构建工作区名称 |
+| `cp_pipeline_name` | 构建流水线名称 |
+| `cp_pipeline_id` | 流水线 ID |
+
+**镜像相关**
+
+| 字段 | 说明 |
+|------|------|
+| `cr_region` | 镜像仓库区域 |
+| `cr_image_full_url` | 完整的镜像 URL |
+
+**Runtime 运行时相关**
+
+| 字段 | 说明 |
+|------|------|
+| `runtime_id` | Runtime 实例 ID |
+| `runtime_endpoint` | 应用访问地址 |
+| `runtime_apikey` | Runtime API 密钥 |
+| `build_timestamp` | 构建时间 |
+| `deploy_timestamp` | 部署时间 |
+
+---
+
+## Hybrid 模式配置
+
+本地构建，云端运行。适合开发调试阶段，本地快速构建镜像后推送到云端运行。
+
+### 配置示例
+
+```yaml
+launch_types:
+  hybrid:
+    region: cn-beijing                       # 云端区域
+    image_tag: "{{timestamp}}"               # 镜像标签（支持模板变量）
+    
+    # Container Registry 配置
+    cr_instance_name: Auto                   # CR 实例名
+    cr_namespace_name: agentkit              # CR 命名空间
+    cr_repo_name: ""                         # CR 仓库名
+    
+    # Runtime 配置
+    runtime_name: Auto                       # Runtime 名称
+    runtime_role_name: Auto                  # 授权角色名
+    runtime_apikey_name: Auto                # API Key 密钥名
+    
+    # 环境变量
+    runtime_envs:
+      MODEL_AGENT_API_KEY: xxx               # 模型 API Key
+      MODEL_AGENT_NAME: ep-xxx               # 模型接入点
+```
+
+### 与 Cloud 模式的区别
+
+| 对比项 | Hybrid 模式 | Cloud 模式 |
+|-------|------------|-----------|
+| **构建位置** | 本地 Docker | 云端 Code Pipeline |
+| **TOS 配置** | 不需要 | 需要（存储代码包） |
+| **构建速度** | 快（本地） | 较慢（上传+云端构建） |
+| **适用场景** | 开发调试 | 生产环境 |
+
+### 配置项详解
+
+Hybrid 模式的配置项与 Cloud 模式基本一致，但**不需要 TOS 相关配置**（因为本地构建不需要上传代码包）。
+
+#### region
+
+**火山引擎区域**
+
+- 默认：`cn-beijing`
+- 作用：选择云端服务运行的地理位置
+
+#### image_tag
+
+**镜像版本标签**
+
+- 默认：`{{timestamp}}`
+- 作用：区分不同版本的镜像
+- 支持模板变量
+
+#### cr_instance_name / cr_namespace_name / cr_repo_name
+
+**Container Registry 配置**
+
+与 Cloud 模式相同，用于存储本地构建的镜像。
+
+```yaml
+cr_instance_name: Auto          # 自动创建 CR 实例
+cr_namespace_name: agentkit     # 命名空间
+cr_repo_name: ""                # 仓库名（空 = 使用 agent_name）
+```
+
+#### runtime_name / runtime_role_name / runtime_apikey_name
+
+**Runtime 配置**
+
+与 Cloud 模式相同，管理云端运行时实例。
+
+#### runtime_envs
+
+**策略级运行时环境变量**
+
+与 Cloud 模式相同，传递给云端运行时的环境变量。
+
+### 自动管理的字段
+
+以下字段由 CLI 自动生成和管理，**不需要手动配置**：
+
+| 字段 | 说明 |
+|------|------|
+| `image_id` | 本地构建的镜像 ID |
+| `build_timestamp` | 构建时间 |
+| `full_image_name` | 完整镜像名 |
+| `cr_image_full_url` | CR 中的完整镜像 URL |
+| `runtime_id` | Runtime 实例 ID |
+| `runtime_endpoint` | 应用访问地址 |
+| `runtime_apikey` | Runtime API 密钥 |
+
+---
+
+## docker_build 配置
+
+自定义 Docker 构建过程，支持自定义基础镜像、构建脚本等。
+
+### 配置示例
+
+```yaml
+docker_build:
+  # Python 项目 - 字符串格式
+  base_image: "python:3.12-slim"
+  
+  # 自定义构建脚本
+  build_script: "scripts/setup.sh"
+  
+  # 强制重新生成 Dockerfile
+  regenerate_dockerfile: false
+  
+  # 目标平台（跨平台构建）
+  platform: "linux/amd64"
+```
+
+**Go 项目多阶段构建**：
+```yaml
+docker_build:
+  base_image:
+    builder: "golang:1.24-alpine"    # 构建阶段镜像
+    runtime: "alpine:latest"         # 运行时镜像
+  build_script: "scripts/install_certs.sh"
+```
+
+### 配置项详解
+
+#### base_image
+
+**自定义基础镜像**
+
+- 默认：根据语言自动选择
+- Python 默认：`python:<version>-slim`
+- Golang 默认：`golang:<version>-alpine`（构建）+ `alpine:latest`（运行）
+
+```yaml
+# Python 项目 - 字符串
+base_image: "python:3.12-alpine"
+
+# Go 项目 - 字典（多阶段构建）
+base_image:
+  builder: "golang:1.24-alpine"
+  runtime: "alpine:latest"
+```
+
+#### build_script
+
+**自定义构建脚本**
+
+- 默认：无
+- 作用：在 Docker 构建过程中执行自定义脚本
+- 路径：相对于项目根目录
+
+**使用场景**：
+- 安装系统依赖
+- 编译 C 扩展
+- 下载额外资源
+
+```yaml
+build_script: "scripts/setup.sh"
+build_script: "docker/install_deps.sh"
+```
+
+#### regenerate_dockerfile
+
+**强制重新生成 Dockerfile**
+
+- 默认：`false`
+- 作用：即使 Dockerfile 已存在，也重新生成
+- CLI 参数：`--regenerate-dockerfile`
+
+#### platform
+
+**目标 CPU 架构**
+
+- 默认：当前系统架构
+- 作用：跨平台构建
+- CLI 参数：`--platform`
+
+```yaml
+platform: "linux/amd64"    # x86_64 架构
+platform: "linux/arm64"    # ARM 架构（如 Apple Silicon）
+```
+
+---
+
+## 全局配置
+
+全局配置存储在 `~/.agentkit/config.yaml`，跨项目共享。
+
+### 配置文件位置
+
+```
+~/.agentkit/config.yaml
+```
+
+### 配置示例
+
+```yaml
+# 火山引擎凭证
+volcengine:
+  access_key: "AKLTxxxxxxxx"
+  secret_key: "xxxxxxxx"
+  region: "cn-beijing"
+
+# Container Registry 默认配置
+cr:
+  instance_name: "my-team-cr-instance"
+  namespace_name: "my-team"
+
+# TOS 默认配置
+tos:
+  bucket: "my-team-bucket"
+  prefix: "agentkit-builds"
+  region: "cn-beijing"
+```
+
+### 配置优先级
+
+当项目配置为空或 `Auto` 时，会自动使用全局配置：
+
+```
+1. 项目配置明确设置的值（最高优先级）
+2. 全局配置 (~/.agentkit/config.yaml)
+3. 默认值（最低优先级）
+```
+
+### 使用场景
+
+**团队共享配置**：
+
+团队成员可以共享相同的 CR 实例和 TOS 存储桶：
+
+```yaml
+# ~/.agentkit/config.yaml
+cr:
+  instance_name: "team-shared-cr"
+  namespace_name: "team-agents"
+
+tos:
+  bucket: "team-shared-bucket"
+```
+
+项目配置只需设置 `Auto`，即可自动使用团队配置：
+
+```yaml
+# agentkit.yaml
+launch_types:
+  cloud:
+    cr_instance_name: Auto    # 使用全局配置中的 team-shared-cr
+    tos_bucket: Auto          # 使用全局配置中的 team-shared-bucket
+```
+
+---
+
+## 最佳实践
+
+### 🌍 多环境管理
+
+为不同环境创建独立配置文件：
+
+```bash
+agentkit.dev.yaml   # 开发环境（local 模式）
+agentkit.test.yaml  # 测试环境（hybrid 模式）
+agentkit.prod.yaml  # 生产环境（cloud 模式）
+```
+
+**使用方式**：
+```bash
+# 开发
+agentkit launch --config-file agentkit.dev.yaml
+
+# 生产
+agentkit launch --config-file agentkit.prod.yaml
+```
+
+### 🔐 安全管理敏感信息
+
+**❌ 错误做法**（硬编码）：
+```yaml
+runtime_envs:
+  MODEL_AGENT_API_KEY: c05d49af-1234-5678-abcd-xxxx  # 不要这样！
+```
+
+**✅ 正确做法**：
+
+**方案 1**：交互式配置
+```bash
+agentkit config  # 运行时输入敏感信息
+```
+
+**方案 2**：使用 .gitignore
+```bash
+# .gitignore 文件
+agentkit.local.yaml    # 本地配置不提交
+agentkit.prod.yaml     # 生产配置不提交
+*.secret.yaml          # 所有包含密钥的配置
+```
+
+**方案 3**：创建配置模板
+```yaml
+# agentkit.yaml.template （提交到 Git）
+runtime_envs:
+  MODEL_AGENT_API_KEY: <请填写你的 API Key>
+  MODEL_AGENT_NAME: <请填写接入点 ID>
+```
+
+### 📝 添加配置注释
+
+让团队成员更容易理解配置：
+
+```yaml
+common:
+  agent_name: weather_agent
+  entry_point: app.py
+  launch_type: cloud  # 生产环境使用云端部署
+
+launch_types:
+  cloud:
+    region: cn-beijing  # 北京区域，离用户最近
+    runtime_envs:
+      # 火山方舟的模型访问凭证
+      MODEL_AGENT_API_KEY: xxx
+      MODEL_AGENT_NAME: ep-xxx
+```
+
+### ✅ 定期验证配置
+
+确保配置文件始终有效：
+
+```bash
+# 方式 1：运行配置命令检查
+agentkit config
+
+# 方式 2：查看配置内容
+cat agentkit.yaml
+
+# 方式 3：尝试构建（不部署）
+agentkit build
+```
+
+---
+
+## 完整示例
+
+### 📱 本地开发配置（Python）
+
+适合快速开发和调试：
+
+```yaml
+common:
+  agent_name: dev_weather_agent
+  entry_point: app.py
+  description: 开发环境的天气查询 Agent
+  language: Python
+  language_version: '3.12'
+  launch_type: local
+  runtime_envs:
+    APP_ENV: development
+
+launch_types:
+  local:
+    image_tag: dev
+    invoke_port: 8000
+    runtime_envs:
+      MODEL_AGENT_API_KEY: xxx
+      DEBUG: 'true'         # 开启调试
+      LOG_LEVEL: debug      # 详细日志
+    ports:
+      - "8000:8000"
+    memory_limit: 512m      # 开发环境资源限制小一些
+    cpu_limit: '0.5'
+```
+
+### � Golang 项目配置
+
+Go 语言 Agent 的配置示例：
+
+```yaml
+common:
+  agent_name: go_agent
+  entry_point: main.go
+  description: Go 语言 Agent
+  language: Golang
+  language_version: '1.24'
+  dependencies_file: go.mod
+  launch_type: hybrid
+
+launch_types:
+  hybrid:
+    region: cn-beijing
+    image_tag: "{{timestamp}}"
+    cr_instance_name: Auto
+    cr_namespace_name: agentkit
+    runtime_envs:
+      MODEL_AGENT_API_KEY: xxx
+
+docker_build:
+  base_image:
+    builder: "golang:1.24-alpine"
+    runtime: "alpine:latest"
+```
+
+### � 生产环境配置
+
+适合正式上线：
+
+```yaml
+common:
+  agent_name: prod_weather_agent
+  entry_point: server.py
+  description: 生产环境的天气查询 Agent
+  language: Python
+  language_version: '3.12'
+  launch_type: cloud
+  runtime_envs:
+    APP_ENV: production
+    LOG_LEVEL: info
+
+launch_types:
+  cloud:
+    region: cn-beijing
+    image_tag: "{{timestamp}}"    # 使用时间戳确保唯一
+    
+    # CR 配置
+    cr_instance_name: Auto
+    cr_namespace_name: production
+    cr_repo_name: weather_agent
+    
+    # TOS 配置
+    tos_bucket: Auto
+    
+    # Runtime 配置
+    runtime_name: Auto
+    runtime_role_name: Auto
+    runtime_apikey_name: Auto
+    
+    runtime_envs:
+      # 基础配置
+      MODEL_AGENT_API_KEY: xxx
+      MODEL_AGENT_NAME: ep-xxx
+      
+      # 可观测性（生产环境推荐开启）
+      OBSERVABILITY_OPENTELEMETRY_APMPLUS_API_KEY: xxx
+      OBSERVABILITY_OPENTELEMETRY_APMPLUS_ENDPOINT: http://apmplus-cn-beijing.volces.com:4317
+      OBSERVABILITY_OPENTELEMETRY_APMPLUS_SERVICE_NAME: prod_weather_agent
+
+docker_build:
+  base_image: "python:3.12-slim"
+```
+
+### 🎯 最小配置示例
+
+**Local 模式**（最简配置）：
+```yaml
+common:
+  agent_name: simple-agent
+  entry_point: agent.py
+  launch_type: local
+```
+
+**Cloud 模式**（最简配置）：
+```yaml
+common:
+  agent_name: cloud-agent
+  entry_point: main.py
+  launch_type: cloud
+
+launch_types:
+  cloud:
+    region: cn-beijing
+    runtime_envs:
+      MODEL_AGENT_API_KEY: xxx
+```
+
+---
+
+## 常见问题
+
+### ❓ 配置文件找不到
+
+```
+Error: Configuration file not found
+```
+
+**解决**：
+```bash
+agentkit init my_agent  # 创建新项目
+# 或
+agentkit config         # 创建配置
+```
+
+### ❓ YAML 格式错误
+
+```
+Error: Invalid YAML format
+```
+
+**检查清单**：
+- ✅ 使用空格缩进（不要用 Tab）
+- ✅ 检查冒号后面有空格
+- ✅ 字符串包含特殊字符要加引号
+- ✅ 模板变量用引号包裹：`"{{timestamp}}"`
+
+### ❓ 必填项缺失
+
+```
+Error: agent_name is required
+```
+
+**解决**：
+```bash
+agentkit config  # 重新配置，填写必填项
+```
+
+### ❓ 模板变量渲染失败
+
+```
+Error: Config field 'cr_instance_name' template variables were not fully rendered
+```
+
+**可能原因**：
+1. 火山引擎凭证未配置
+2. AK/SK 权限不足
+
+**解决方法**：
+```bash
+# 检查环境变量
+echo $VOLC_ACCESSKEY
+echo $VOLC_SECRETKEY
+
+# 或检查全局配置
+cat ~/.agentkit/config.yaml
+```
+
+### ❓ 环境变量不生效
+
+**可能原因**：
+1. 变量名拼写错误
+2. 配置没有保存
+3. 没有重新部署
+4. `common.runtime_envs` 和策略级 `runtime_envs` 混淆
+
+**解决方法**：
+```bash
+# 1. 检查配置
+cat agentkit.yaml
+
+# 2. 确认环境变量位置正确
+# common.runtime_envs - 所有模式共享
+# launch_types.<mode>.runtime_envs - 该模式专用
+
+# 3. 重新部署
+agentkit deploy
+```
+
+### ❓ 旧配置字段名不兼容
+
+如果你的配置文件使用旧版字段名（如 `ve_cr_instance_name`、`python_version`），请更新为新名称：
+
+| 旧字段名 | 新字段名 |
+|---------|---------|
+| `python_version` | `language_version` |
+| `ve_cr_instance_name` | `cr_instance_name` |
+| `ve_cr_namespace_name` | `cr_namespace_name` |
+| `ve_cr_repo_name` | `cr_repo_name` |
+| `ve_runtime_id` | `runtime_id` |
+| `ve_runtime_name` | `runtime_name` |
+| `ve_runtime_endpoint` | `runtime_endpoint` |
+
+> 💡 **提示**：CLI 仍然支持旧字段名（通过 aliases），但建议迁移到新名称。
+
+---
+
+## 配置字段速查表
+
+### common 字段
+
+| 字段 | 必填 | 默认值 | 说明 |
+|------|------|-------|------|
+| `agent_name` | ✅ | - | Agent 名称 |
+| `entry_point` | ✅ | - | 入口文件 |
+| `description` | ❌ | 空 | 描述信息 |
+| `language` | ❌ | `Python` | 编程语言 |
+| `language_version` | ❌ | `3.12`/`1.24` | 语言版本 |
+| `dependencies_file` | ❌ | 自动检测 | 依赖文件 |
+| `launch_type` | ❌ | `local` | 部署模式 |
+| `runtime_envs` | ❌ | `{}` | 应用级环境变量 |
+
+### Cloud/Hybrid 模式字段
+
+| 字段 | 默认值 | 说明 |
+|------|-------|------|
+| `region` | `cn-beijing` | 火山引擎区域 |
+| `image_tag` | `{{timestamp}}` | 镜像标签 |
+| `cr_instance_name` | `Auto` | CR 实例名 |
+| `cr_namespace_name` | `agentkit` | CR 命名空间 |
+| `cr_repo_name` | 空（用 agent_name） | CR 仓库名 |
+| `runtime_name` | `Auto` | Runtime 名称 |
+| `runtime_envs` | `{}` | 策略级环境变量 |
+
+### docker_build 字段
+
+| 字段 | 默认值 | 说明 |
+|------|-------|------|
+| `base_image` | 自动选择 | 基础镜像 |
+| `build_script` | 无 | 构建脚本 |
+| `regenerate_dockerfile` | `false` | 强制重新生成 |
+| `platform` | 当前架构 | 目标平台 |
+
+---
+
+## 下一步
+
+- 📖 [CLI 概览](./1.overview.md) - 了解整体功能和特性
+- 🎮 [命令详解](./2.commands.md) - 学习每个命令的用法
+- 🚀 [快速开始](../1.introduction/3.quickstart.md) - 动手实践完整流程

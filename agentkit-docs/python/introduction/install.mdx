@@ -1,0 +1,149 @@
+---
+title: 安装
+---
+
+本指南将引导您完成 AgentKit 的安装和基本配置。
+
+## 环境要求
+
+- **Python 版本**: 3.10 或更高版本
+- **操作系统**: Linux, macOS
+- **包管理器**: 推荐使用 `uv` 或 `pip`
+
+我们强烈建议在 Python 虚拟环境 中安装 AgentKit，以避免与系统包产生冲突。
+
+## 安装方法
+
+### 方法一：pip 安装
+
+#### 稳定版本
+适用于生产环境部署：
+
+```bash
+pip install agentkit-sdk-python
+```
+
+#### 开发版本
+包含最新功能和修复：
+
+```bash
+pip install --pre agentkit-sdk-python
+```
+
+#### 指定版本
+安装特定版本：
+
+```bash
+pip install agentkit-sdk-python==0.1.7
+```
+
+### 方法二：uv 安装（推荐）
+
+我们推荐使用 `uv` 来管理虚拟环境和依赖。
+
+```bash
+# install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Initialize uv environment
+uv init --no-workspace
+
+# Specify Python version for the environment
+uv venv --python 3.12
+
+# Activate the virtual environment
+source .venv/bin/activate
+
+# Install AgentKit using uv
+uv pip install agentkit-sdk-python
+
+# Install veadk (recommended for local debugging)
+uv pip install veadk-python
+```
+
+### 方法三：源码安装
+适用于开发者和需要定制化场景：
+
+#### 从官方Github仓库安装
+
+```bash
+# clone repo
+git clone git@github.com:volcengine/agentkit-sdk-python.git
+
+cd agentkit-sdk-python
+
+# we use uv to build this project
+uv venv --python 3.12
+
+# Activate the virtual environment
+source .venv/bin/activate
+
+# only install necessary requirements
+uv sync
+
+# install agentkit-sdk-python with editable mode
+uv pip install -e .
+```
+
+如果您习惯使用 `pip` 和 `venv`，也可以执行以下命令：
+
+```bash
+# Create virtual environment
+python3 -m venv .venv
+
+# Activate virtual environment
+source .venv/bin/activate
+
+# Install AgentKit
+pip install agentkit-sdk-python
+```
+
+### 3. 验证安装
+
+安装完成后，执行以下命令验证 `agentkit` CLI 是否可用：
+
+```bash
+agentkit --version
+```
+
+如果成功输出版本号，则说明 AgentKit 已成功安装。
+
+## 认证配置
+
+在使用 `agentkit` CLI 与 AgentKit Platform 交互之前，您需要配置访问凭证（AK/SK）。
+
+### 推荐方式：使用全局配置
+
+使用 AgentKit 的全局配置功能来安全地存储您的凭证：
+
+```bash
+# 初始化全局配置
+agentkit config --global --init
+
+# 设置您的访问凭证
+agentkit config --global --set volcengine.access_key="YOUR_ACCESS_KEY"
+agentkit config --global --set volcengine.secret_key="YOUR_SECRET_KEY"
+
+# 验证配置
+agentkit config --global --show
+```
+
+这种方式将凭证安全地存储在 `~/.agentkit/config.yaml` 文件中，避免在 shell 历史记录中暴露敏感信息。
+
+### 环境变量方式（开发调试）
+
+对于临时开发调试，您可以设置环境变量：
+
+```bash
+export VOLCENGINE_ACCESS_KEY="YOUR_ACCESS_KEY"
+export VOLCENGINE_SECRET_KEY="YOUR_SECRET_KEY"
+```
+
+⚠️ **注意**：出于安全考虑，不建议将包含敏感信息的 `export` 命令添加到 shell 配置文件（如 `~/.bashrc` 或 `~/.zshrc`）中，因为这可能导致凭证泄露。
+
+## 下一步
+
+现在您已经成功安装并配置了 AgentKit，可以开始构建您的第一个 Agent 了。
+
+- **[快速开始](./3.quickstart.md)**: 跟随我们的快速开始指南，体验从开发到部署的全过程。
+- **[故障排除](./4.troubleshooting.md)**: 如果遇到问题，可以查阅故障排除指南。

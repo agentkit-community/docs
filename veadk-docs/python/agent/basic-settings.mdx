@@ -1,0 +1,97 @@
+---
+title: "基本配置"
+---
+
+我们为您提供了自定义 Agent 的基本配置选项，以满足不同场景的需求。
+
+## 设置 Agent 元信息
+
+通过以下方式设置 Agent 元数据信息：
+
+```python agent.py lines icon="python"
+from veadk import Agent, Runner
+
+root_agent = Agent(
+    name="life_assistant",
+    description="生活助手",
+    instruction="你是一个生活助手，你可以回答用户的问题。",
+)
+```
+
+关键属性含义如下：
+
+- `name`：Agent 的名称
+- `description`：Agent 的功能描述（在 A2A 中标识 Agent 的基本能力）
+- `instruction`：Agent 的系统提示词（System Prompt, SP），用于定义其行为和风格
+
+## 设置方舟自定义推理接入点
+
+
+## 设置不同模型
+
+如果您想使用本地模型或其他提供商的模型，可以在初始化时指定模型相关配置：
+
+```python agent.py lines icon="python"
+from veadk import Agent
+
+agent = Agent(
+    model_provider="...",
+    model_name="...",
+    model_api_key="...",
+    model_api_base="..."
+)
+```
+
+VeADK Python 版本中的 Agent 推理模型基于 [LiteLLM](https://github.com/BerriAI/litellm) 实现，因此您可以使用 LiteLLM 支持的所有模型提供商。您可以查看 [LiteLLM 支持的模型提供商列表](https://docs.litellm.ai/docs/providers)来设置 `model_provider` 参数。
+
+## 设置模型 Fallback
+
+VeADK 为您提供了基于 LiteLLM 的 [Fallbacks](https://docs.litellm.ai/docs/completion/reliable_completions) 模型容错机制，能够在前序模型访问失败时进行模型自动切换。例如，当目标模型经多次重试仍调用失败时，系统将自动切换至备选模型来继续执行任务：
+
+```python agent.py lines icon="python"
+from veadk import Agent
+
+agent = Agent(
+    model_name=[
+        "doubao-seed-1-8-251215",
+        "doubao-seed-1-6-251015",
+        "doubao-seed-1.6-250615",
+    ]
+)
+```
+
+在上述配置中，VeADK 默认会首先尝试 `doubao-seed-1-8-251215` 模型，如果失败后会尝试后续模型，直至成功。
+
+## 设置模型参数
+
+此外，您还可以根据[火山引擎方舟大模型平台](https://www.volcengine.com/product/ark)的能力，指定一些[额外选项](https://www.volcengine.com/docs/82379/1494384?lang=zh)，例如您可以禁用豆包 1.6 系列模型的思考能力，以实现更加快速的响应：
+
+```python agent.py lines icon="python"
+import asyncio
+
+from veadk import Agent, Runner
+
+agent = Agent(
+    model_name="doubao-seed-1.6-250615",
+    model_extra_config={"extra_body": {"thinking": {"type": "disabled"}}},
+)
+runner = Runner(agent=agent)
+
+response = asyncio.run(runner.run(messages="hi!"))
+print(response)
+```
+
+## 自定义模型客户端
+
+VeADK 支持您直接定义 LiteLLM 的客户端，来实现高度自定义的模型配置：
+
+```python agent.py lines icon="python"
+from google.adk.models.lite_llm import LiteLlm
+from veadk import Agent
+
+# 自定义您的模型客户端
+llm = LiteLlm()
+
+# 直接将模型客户端传递给 Agent
+agent = Agent(model=llm)
+```

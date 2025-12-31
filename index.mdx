@@ -1,0 +1,45 @@
+---
+title: "介绍"
+description: "欢迎来到 AgentKit 文档中心"
+---
+
+## 介绍
+
+这是介绍。这是 `inline_data code` 代码。
+
+```python agent.py lines icon="python"
+from google.genai.types import Blob, Content, Part
+
+from veadk import Agent, Runner
+
+APP_NAME = "app"
+USER_ID = "user"
+SESSION_ID = "session"
+
+agent = Agent()
+runner = Runner(agent=agent, app_name=APP_NAME)
+
+user_message = Content(
+  role="user",
+  parts=[
+    Part(
+      text="请详细描述这张图片的所有内容，包括物体、颜色、布局和文字信息（如有）。"
+    ),
+    Part(
+      inline_data=Blob(
+        display_name=os.path.basename(image_path),
+        data=read_png_to_bytes(image_path),
+        mime_type="image/png",
+      )
+    ),
+  ],
+)
+
+async for event in runner.run_async(
+  user_id=runner.user_id,
+  session_id=session_id,
+  new_message=user_message,
+  run_config=RunConfig(max_llm_calls=1),
+):
+  # 在这里处理您的 Event 事件
+```

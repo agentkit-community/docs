@@ -1,0 +1,17 @@
+@font-face {
+  font-family: 'MapleMono';
+  src: url('/fonts/MapleMono-NF-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.shiki {
+  font-family: 'MapleMono', monospace !important;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.shiki code {
+  font-family: inherit !important;
+}

@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "entries": {
+    "brc_xnfxu649p3kyiwxm8ttr28h2": {
+      "2308615ee2278ea6a11fc5396b3d5ee942f17db33b6f0e7139236eeeaca2e162": {
+        "b518d5c8149a1c1556c9c1bb2726adfd1482f01bc9b12fd0a5b959444640c6fe": {
+          "en-US": {
+            "updatedAt": "2025-12-29T12:44:47.995Z",
+            "postProcessHash": "b9c5a0fead9bd2fbc322f141da8f1ea9d31086b1b37cac70b02cb7dd136c8daa"
+          },
+          "es-ES": {
+            "updatedAt": "2025-12-29T10:25:33.633Z"
+          },
+          "fr-FR": {
+            "updatedAt": "2025-12-29T10:25:33.634Z",
+            "postProcessHash": "999ab39c2b9d20fe368187f1bce56f3420ac6519c2173cdfaf8431d30d98ff61"
+          }
+        },
+        "999ab39c2b9d20fe368187f1bce56f3420ac6519c2173cdfaf8431d30d98ff61": {
+          "en-US": {
+            "updatedAt": "2025-12-29T10:27:50.237Z",
+            "postProcessHash": "a66c54cc8f3ea52ca8c28bb115a85229662cf05b6b20c241bb7abb1f56844961"
+          },
+          "es-ES": {
+            "updatedAt": "2025-12-29T10:27:50.239Z",
+            "postProcessHash": "92b72686b0b4683a624bcabbd24b285feb774ad42c89d5f2c6f36bcc88b202ef"
+          },
+          "fr-FR": {
+            "updatedAt": "2025-12-29T10:27:50.240Z",
+            "postProcessHash": "688f43831108a68c59e5899a17b78cee8b745e6704d0023b0bb5cdb205676bc6"
+          }
+        }
+      },
+      "17c8b627f535d185091a9039d2ddc61baa66d4436b12a6ab55cf75239b28f11d": {
+        "92b72686b0b4683a624bcabbd24b285feb774ad42c89d5f2c6f36bcc88b202ef": {
+          "en-US": {
+            "updatedAt": "2025-12-29T10:30:56.489Z"
+          }
+        }
+      },
+      "4244dc2c930d39d315952a8543b976be882854e2c3c69de68090b7215b338ac0": {
+        "a66c54cc8f3ea52ca8c28bb115a85229662cf05b6b20c241bb7abb1f56844961": {
+          "en-US": {
+            "updatedAt": "2025-12-29T10:30:56.492Z"
+          }
+        }
+      },
+      "ae517660e7555d2ab0b029ad45131f12591d88c6615bb51a3d5c183ea89f2600": {
+        "688f43831108a68c59e5899a17b78cee8b745e6704d0023b0bb5cdb205676bc6": {
+          "en-US": {
+            "updatedAt": "2025-12-29T10:30:56.492Z",
+            "postProcessHash": "f588c446655d05cd4c8ae1da8c291c28deb60457a2bc6bbe696b2a244b7927ce"
+          }
+        }
+      },
+      "b417c8b73dfdebe9f65104672e3aa493c233851dd7b1e475630862c1e7559d2c": {
+        "b9c5a0fead9bd2fbc322f141da8f1ea9d31086b1b37cac70b02cb7dd136c8daa": {
+          "en-US": {
+            "updatedAt": "2025-12-29T10:49:08.665Z",
+            "postProcessHash": "b9c5a0fead9bd2fbc322f141da8f1ea9d31086b1b37cac70b02cb7dd136c8daa"
+          }
+        }
+      }
+    }
+  }
+}

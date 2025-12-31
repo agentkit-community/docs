@@ -1,0 +1,40 @@
+---
+title: "快速开始"
+---
+
+本快速开始教程讲引导您进行一个最简的 AI Agent 构建与运行。
+
+## 前置依赖
+
+在开始前，您需要进行如下步骤：
+
+- [安装](/veadk-docs/get-started/install) VeADK
+- 在您的终端设置 `MODEL_AGENT_API_KEY` 环境变量（火山引擎方舟平台 API Key）
+
+## 脚手架构建 Agent
+
+您可以通过 VeADK 提供的脚手架命令行来创建一个脚手架模板：
+
+```bash
+veadk create
+```
+
+您将被提示输入如下信息：
+
+- 项目名称（这也将会成为您的本地目录名称）
+- 方舟平台 API Key（您也可以稍后手动填写到配置文件中）
+
+## 代码构建 Agent
+
+您可以通过代码来创建一个简单的模拟天气查询 Agent：
+
+```python agent.py lines icon="python"
+from veadk import Agent # 导入 Agent 模块
+
+root_agent = Agent(
+    name="root_agent",  # Agent 名称 
+    description="A helpful assistant for user questions.",  # Agent 描述
+    instruction="Answer user questions to the best of your knowledge",  # Agent 系统提示词
+    model_name="doubao-seed-1-6-251015",    # 模型名称
+)
+```
