@@ -1,0 +1,70 @@
+---
+title: Viking 知识库
+---
+
+VeADK 为您提供了在 Langchain 与 Langgraph 生态中使用 Viking 知识库的使用方法与相关工具。
+
+## 前置准备
+
+您需要在环境变量中配置您的火山引擎 AK / SK 来访问您的 Viking 记忆库资源：
+
+- `VOLCENGINE_ACCESS_KEY`
+- `VOLCENGINE_SECRET_KEY`
+
+## 知识库查询
+
+您可以为您的 Agent 挂载 `load_knowledgebase` 工具，通过语义的方式来查询您提供的知识库中的内容。
+
+```python agent.py lines icon="python"
+from dataclasses import dataclass
+
+from langchain.agents import create_agent
+from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.store.memory import InMemoryStore
+from requests import session
+from veadk.community.langchain_ai.middlewares.save_session import save_session
+from veadk.community.langchain_ai.models.ark_model import ArkChatModel
+from veadk.community.langchain_ai.store.memory.viking_memory import (
+    VikingMemoryStore,
+)
+from veadk.community.langchain_ai.tools.load_knowledgebase import (
+    load_knowledgebase,
+)
+from veadk.community.langchain_ai.tools.load_memory import load_memory
+from veadk.knowledgebase import KnowledgeBase
+
+knowledgebase = KnowledgeBase(
+    name="preference",
+    description="my personal preferences",
+    backend="viking",
+    index="viking_demo_create_2",
+)
+
+
+@dataclass
+class Context:
+    knowledgebase: KnowledgeBase
+
+
+llm = ArkChatModel(model="deepseek-v3-1-terminus")
+
+agent = create_agent(
+    model=llm,
+    # middleware=[save_session],
+    context_schema=Context,
+    tools=[load_knowledgebase],
+)
+
+# Invoke with user context
+result = agent.invoke(
+    {
+        "messages": [
+            {"role": "user", "content": "查询知识库，看看我最喜欢什么水果？"}
+        ]
+    },
+    context=Context(knowledgebase=knowledgebase),
+)
+print(result)
+```

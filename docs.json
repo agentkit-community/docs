@@ -135,6 +135,7 @@
                 "dropdown": "Langchain",
                 "icon": "/assets/images/langchain-color.svg",
                 "pages": [
+                  "veadk-docs/python/community/langchain-ai/overview",
                   {
                     "group": "模型",
                     "pages": [
@@ -144,7 +145,6 @@
                   {
                     "group": "记忆",
                     "pages": [
-                      "veadk-docs/python/community/langchain-ai/memory/short-term-memory",
                       "veadk-docs/python/community/langchain-ai/memory/long-term-memory"
                     ]
                   },

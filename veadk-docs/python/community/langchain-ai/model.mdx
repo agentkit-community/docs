@@ -1,3 +1,29 @@
 ---
 title: 模型
 ---
+
+VeADK 为您在 Langchain 中提供了方舟平台大模型的封装，您可以通过引入 `ArkChatModel` 来调用方舟平台大模型。
+
+## 前置准备
+
+您需要在环境变量中指定 `MODEL_AGENT_API_KEY` 来设置方舟大模型 API Key：
+
+```bash
+export MODEL_AGENT_API_KEY=...
+```
+
+## 创建智能体
+
+```python agent.py lines icon="python"
+from veadk.community.langchain_ai.models.ark_model import ArkChatModel
+
+
+llm = ArkChatModel(model="deepseek-v3-1-terminus")
+
+agent = create_agent(model=llm)
+
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "Hi !"}]},
+)
+print(result)
+```

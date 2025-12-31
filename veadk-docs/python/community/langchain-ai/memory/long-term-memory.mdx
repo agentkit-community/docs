@@ -1,0 +1,103 @@
+---
+title: 长期记忆
+---
+
+VeADK 为您提供了在 Langchain 与 Langgraph 生态中使用 Viking 记忆库的使用方法与相关工具。
+
+## 前置准备
+
+您需要在环境变量中配置您的火山引擎 AK / SK 来访问您的 Viking 记忆库资源：
+
+- `VOLCENGINE_ACCESS_KEY`
+- `VOLCENGINE_SECRET_KEY`
+
+## 会话保存
+
+在每次 Agent 执行结束时，您可以通过设置 `after_agent` 中间件来调用 `save_session` 方法，将本次会话上下文保存到 Viking 记忆库中：
+
+```python agent.py lines icon="python"
+from veadk.community.langchain_ai.middlewares.save_session import save_session
+from veadk.community.langchain_ai.models.ark_model import ArkChatModel
+from veadk.community.langchain_ai.store.memory.viking_memory import (
+    VikingMemoryStore,
+)
+
+
+@dataclass
+class Context:
+    user_id: str
+    session_id: str
+
+
+llm = ArkChatModel(model="deepseek-v3-1-terminus")
+store = VikingMemoryStore(index="aiops")
+
+agent = create_agent(
+    model=llm,
+    store=store,  # Enables tool access to store
+    context_schema=Context,
+    tools=[load_memory],
+)
+
+# Invoke with user context
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "我最喜欢苹果加香蕉了"}]},
+    context=Context(user_id="user_123", session_id="session_1"),
+)
+print(result)
+```
+
+## 会话查询
+
+您可以为您的 Agent 挂载 `load_memory` 工具，通过语义的方式来查询历史的跨会话上下文。
+
+```python agent.py lines icon="python"
+from dataclasses import dataclass
+
+from langchain.agents import create_agent
+from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.store.memory import InMemoryStore
+from requests import session
+from veadk.community.langchain_ai.middlewares.save_session import save_session
+from veadk.community.langchain_ai.models.ark_model import ArkChatModel
+from veadk.community.langchain_ai.store.memory.viking_memory import (
+    VikingMemoryStore,
+)
+from veadk.community.langchain_ai.tools.load_memory import load_memory
+
+
+@dataclass
+class Context:
+    user_id: str
+    session_id: str
+
+
+llm = ArkChatModel(model="deepseek-v3-1-terminus")
+store = VikingMemoryStore(index="aiops")
+
+agent = create_agent(
+    model=llm,
+    # middleware=[save_session],
+    store=store,  # Enables tool access to store
+    context_schema=Context,
+    tools=[load_memory],
+)
+
+# Invoke with user context
+# result = agent.invoke(
+#     {"messages": [{"role": "user", "content": "我最喜欢苹果加香蕉了"}]},
+#     context=Context(user_id="user_123", session_id="session_1"),
+# )
+# print(result)
+
+# Invoke with user context
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "我最喜欢啥？"}]},
+    context=Context(user_id="user_123", session_id="session_2"),
+)
+print(result)
+```
+
+结果可见，不同的 `session_id` 仍然可以查询到相关记忆。
